@@ -29,5 +29,7 @@ def train(config):
     # training
     history = model.fit(
         train_dataset, epochs=config['train']['epochs'], validation_data=test_dataset, callbacks=callbacks)
+    model.save('models/baseline_SavedModelFormat/')
+    model.save('baseline.h5')
 
-    return history, model
+    return model

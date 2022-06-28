@@ -4,6 +4,7 @@ import tensorflow_model_optimization as tfmot
 import numpy as np
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from wandb.keras import WandbCallback
+import wandb
 
 
 from src.data_tests import pass_tests_before_fitting
@@ -69,35 +70,38 @@ def prune(config, model):
     return history, model_for_pruning
 
 
-def strip_pruning(config, model):
+def strip_pruning(model, save_path):
     model_for_export = tfmot.sparsity.keras.strip_pruning(model)
+    model_for_export.save('pruned_model.h5')
 
-    _, pruned_keras_file = tempfile.mkstemp('.h5')
-    tf.keras.models.save_model(
-        model_for_export, pruned_keras_file, include_optimizer=False)
-
-    print('Saved pruned Keras model to:', pruned_keras_file)
-
-    converter = tf.lite.TFLiteConverter.from_keras_model(model_for_export)
-    pruned_tflite_model = converter.convert()
-    _, pruned_tflite_file = tempfile.mkstemp('.tflite')
-
-    with open(pruned_tflite_file, 'wb') as f:
-        f.write(pruned_tflite_model)
-
-    print('Saved pruned TFLite model to:', pruned_tflite_file)
+    return model_for_export
 
 
-def quantize(config, model):
+def quantize(model, save_path):
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
-
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     quantized_and_pruned_tflite_model = converter.convert()
 
-    _, quantized_and_pruned_tflite_file = tempfile.mkstemp('.tflite')
+    quantized_tflite_model = converter.convert()
+    quantized_and_pruned_tflite_file = 'quantized.tflite'
 
     with open(quantized_and_pruned_tflite_file, 'wb') as f:
-        f.write(quantized_and_pruned_tflite_model)
+        f.write(quantized_tflite_model)
+    return quantized_tflite_model
+
+
+def compare_baseline_to_pruned(baseline, pruned, test_x, test_y):
+    baseline_accuracy = baseline.evaluate(
+        test_x, test_y, verbose=0)
+
+    pruned_accuracy = pruned.evaluate(
+        test_x, test_y, verbose=0)
+
+    wandb.log({"baseline_accuracy": baseline_accuracy})
+    wandb.log({"pruned_accuracy": pruned_accuracy})
+
+    print('Baseline test accuracy:', baseline_accuracy)
+    print('Pruned test accuracy:', pruned_accuracy)
 
 # TODO: this needs thinking
 # def evaluate_model(interpreter, test_images, test_labels):
@@ -138,12 +142,10 @@ def quantize(config, model):
 #     # print('Pruned TF test accuracy:', model_for_pruning_accuracy)
 
 
-def compare_model(baseline, pruned, test_x, test_y):
-    _, baseline_accuracy = baseline.evaluate(
-        test_x, test_y, verbose=0)
+def optimize(config, model):
+    _, pruned_model = prune(config, model)
+    pruned_model = strip_pruning(pruned_model, config['pruned_path'])
+    # compare_baseline_to_pruned(model, pruned_model, test_x, test_y)
 
-    _, pruned_accuracy = pruned.evaluate(
-        test_x, test_y, verbose=0)
-
-    print('Baseline test accuracy:', baseline_accuracy)
-    print('Pruned test accuracy:', pruned_accuracy)
+    _, quantized_model = quantize(pruned_model, config['quaintized_path'])
+    # compare_baseline_to_tflite(model, quantized_model)

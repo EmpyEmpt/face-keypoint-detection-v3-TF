@@ -7,28 +7,43 @@ from keras.layers import Activation
 from keras.layers import Dense
 from keras.layers import GlobalAveragePooling2D
 from keras.layers import Reshape
+from keras.regularizers import l2
 
 
 def build(input_shape: int, output_shape: tuple = (68, 2)):
     """Builds a model"""
-    model = Sequential(name='Keypoints detector v3.0.0')
-
+    model = Sequential(name='KeypointsDetectorv3.1.0')
     model.add(Conv2D(64, (1, 1), padding='same',
               input_shape=input_shape))
-    model.add(Conv2D(96, (2, 2)))
+    model.add(Conv2D(64, (5, 5), padding='same'))
     model.add(BatchNormalization())
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='valid'))
 
-    model.add(Conv2D(128, (2, 2)))
-    model.add(Conv2D(160, (2, 2)))
-    model.add(BatchNormalization())
+    model.add(Conv2D(64, (1, 1), kernel_regularizer=l2(0.001)))
+    model.add(Conv2D(64, (3, 3), kernel_regularizer=l2(0.001)))
+    model.add(BatchNormalization(input_shape=input_shape))
     model.add(Activation('relu'))
     model.add(MaxPooling2D(pool_size=(2, 2),
               strides=(2, 2), padding='valid'))
 
-    model.add(Conv2D(192, (3, 3)))
-    model.add(BatchNormalization())
+    model.add(Conv2D(96, (3, 3), kernel_regularizer=l2(0.001)))
+    model.add(Conv2D(96, (5, 5), kernel_regularizer=l2(0.001)))
+    model.add(BatchNormalization(input_shape=input_shape))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2),
+              strides=(2, 2), padding='valid'))
+
+    model.add(Conv2D(64, (1, 1), kernel_regularizer=l2(0.001)))
+    model.add(Conv2D(64, (3, 3), kernel_regularizer=l2(0.001)))
+    model.add(BatchNormalization(input_shape=input_shape))
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2),
+              strides=(2, 2), padding='valid'))
+
+    model.add(Conv2D(128, (1, 1), kernel_regularizer=l2(0.001)))
+    model.add(Conv2D(128, (3, 3), kernel_regularizer=l2(0.001)))
+    model.add(BatchNormalization(input_shape=input_shape))
     model.add(Activation('relu'))
     model.add(GlobalAveragePooling2D())
 

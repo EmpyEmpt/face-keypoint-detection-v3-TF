@@ -3,6 +3,7 @@ import yaml
 import wandb
 
 from src.train import train
+from src.optimization import optimize
 
 
 def main():
@@ -10,13 +11,15 @@ def main():
 
     config = yaml.safe_load(open('config.yaml', 'r'))
 
-    wandb.init(project=config['wandb']['project'],
-               name=config['wandb']['name'],
-               config=config)
+    with wandb.init(project=config['wandb']['project'],
+                    name=config['wandb']['name'],
+                    config=config):
+        model = train(config)
 
-    train(config)
-
-    wandb.finish()
+    with wandb.init(project=config['wandb']['project'],
+                    name='Optimization',
+                    config=config):
+        optimize(config, model)
 
 
 if __name__ == '__main__':

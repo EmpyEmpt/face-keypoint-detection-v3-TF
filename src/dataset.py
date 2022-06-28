@@ -35,20 +35,21 @@ def fetch_ds(config, op_type='train'):
     train_x, test_x, train_y, test_y = split_dataset(
         images, keypoints, config['dataset']['split_ratio'])
 
+    return train_x, test_x, train_y, test_y
     # put into tf.ds
-    train_dataset = tf.data.Dataset.from_tensor_slices(
-        (train_x, train_y))
-    test_dataset = tf.data.Dataset.from_tensor_slices((test_x, test_y))
+    # train_dataset = tf.data.Dataset.from_tensor_slices(
+    #     (train_x, train_y))
+    # test_dataset = tf.data.Dataset.from_tensor_slices((test_x, test_y))
 
-    # visualization
-    # log_image_artifacts_to_wandb(data=train_ds, metadata=metadata)
+    # # visualization
+    # # log_image_artifacts_to_wandb(data=train_ds, metadata=metadata)
 
-    train_dataset = train_dataset.batch(config[op_type]['batch_size'])
-    train_dataset = train_dataset.cache()
-    train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
+    # train_dataset = train_dataset.batch(config[op_type]['batch_size'])
+    # train_dataset = train_dataset.cache()
+    # train_dataset = train_dataset.prefetch(buffer_size=AUTOTUNE)
 
-    test_dataset = test_dataset.batch(config[op_type]['batch_size'])
-    test_dataset = test_dataset.cache()
-    test_dataset = test_dataset.prefetch(buffer_size=AUTOTUNE)
+    # test_dataset = test_dataset.batch(config[op_type]['batch_size'])
+    # test_dataset = test_dataset.cache()
+    # test_dataset = test_dataset.prefetch(buffer_size=AUTOTUNE)
 
-    return train_dataset, test_dataset
+    # return train_dataset, test_dataset
